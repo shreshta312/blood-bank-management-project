@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useUser, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { useUser, useClerk, UserButton } from "@clerk/nextjs";
 import { navigationRole } from "@/lib/session";
 import Icon from "@/components/ds/icons";
 import HealthIndicator from "@/components/ds/health-indicator";
@@ -53,6 +53,8 @@ export function AppShell({ children, authConfigured = false }: { children: React
   const setOpen = (v: boolean) => setOpenFor(v ? path : null);
   const section = path === "/" ? "Overview" : TITLES.find(([p]) => path.startsWith(p))?.[1] ?? "Labs";
   const close = () => setOpen(false);
+  const { isSignedIn, isLoaded } = useUser();
+  const { openSignIn } = useClerk();
 
   return (
     <div className="ds-shell">
@@ -70,16 +72,13 @@ export function AppShell({ children, authConfigured = false }: { children: React
           <button className="ds-menu-btn" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} onClick={() => setOpen(!open)}><Icon name={open ? "close" : "menu"} /></button>
           <p className="ds-topbar-title">{section}</p>
           <HealthIndicator />
-          {authConfigured && (
+          {authConfigured && isLoaded && (
             <div className="ds-auth-controls" style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "12px" }}>
-              <SignedIn>
+              {isSignedIn ? (
                 <UserButton />
-              </SignedIn>
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="ds-btn ds-btn-small ds-btn-quiet">Sign in</button>
-                </SignInButton>
-              </SignedOut>
+              ) : (
+                <button className="ds-btn ds-btn-small ds-btn-quiet" onClick={() => openSignIn()}>Sign in</button>
+              )}
             </div>
           )}
         </header>
